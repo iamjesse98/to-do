@@ -3,6 +3,7 @@ import os
 import json
 import datetime
 import io
+from bottle import run, route
 
 try:
     to_unicode = unicode
@@ -25,7 +26,7 @@ try:
 			print("{} added to {}".format(sys.argv[2], sys.argv[3]))
 			with open(sys.argv[3] + '.json') as data_file:    
     				item = json.load(data_file)
-			item.update({sys.argv[2] : datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})
+			item.update({sys.argv[2] : {'time': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}})
 			with io.open(sys.argv[3] + '.json', 'w', encoding='utf8') as outfile:
     				str_ = json.dumps(item, indent=4, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
     				outfile.write(to_unicode(str_))
@@ -34,14 +35,25 @@ try:
 	
 	elif( sys.argv[1] == 'list' ):
 		if os.path.exists(sys.argv[2] + '.json'):
-    			with open(sys.argv[2] + '.json') as json_data:
-    				d = json.load(json_data)
-    				#print(d.keys())
+			with open(sys.argv[2] + '.json') as data_file:
+				d = json.load(data_file)
+			print(*d.keys())
 		else:
 			print("There is no such user!!!")
 	
 	#elif( sys.argv[1] == 'delete' ):
 		#print("delete")
+	elif( sys.argv[1] == 'show' ):
+		@route('/show/<name>')
+		def show(name):
+			if os.path.exists(sys.argv[2] + '.json'):
+				name = sys.argv[2]
+				with open(sys.argv[2] + '.json') as data_file:
+					d = json.load(data_file)
+				ites = ['<li>{}</li>'.format(i) for i in d.keys()]
+				return ''.join(ites)
+		run(reload = True, debug = True)
+
 	else:
 		print("Read the manual properly")
 except IndexError:
